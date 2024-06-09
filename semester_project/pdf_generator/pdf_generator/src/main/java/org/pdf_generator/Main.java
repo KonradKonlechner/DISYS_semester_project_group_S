@@ -12,10 +12,7 @@ import com.itextpdf.layout.properties.UnitValue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,11 +25,36 @@ public class Main {
 
     public static void main(String[] args ) throws IOException {
 
-        try (var connection =  DB.connect()){
-           System.out.println("Connected to the PostgreSQL database.");
-        } catch (SQLException e) {
-           System.err.println(e.getMessage());
+        int customerId = 1;
+
+        try (Connection c = DB.connect()) {
+
+            System.out.println("Connected to the PostgreSQL customer database.");
+
+            String query = "SELECT first_name, last_name FROM customer WHERE id = ?";
+
+            PreparedStatement s = c.prepareStatement(query);
+
+            s.setInt(1, customerId);
+
+            ResultSet rs = s.executeQuery();
+
+            rs.next();
+
+            String customerFirstName = rs.getString("first_name");
+            String customerLastName = rs.getString("last_name");
+
+            System.out.println("Vorname: " + customerFirstName + ", Nachname: " + customerLastName);
+
+            /*
+            while(rs.next()) {
+                System.out.println("Vorname: " + rs.getString("first_name") + ", Nachname: " + rs.getString("last_name"));
+            }*/
+        } catch (SQLException se) {
+            se.printStackTrace();
         }
+
+
 
         PdfWriter writer = new PdfWriter(TARGET_PDF);
         PdfDocument pdf = new PdfDocument(writer);
