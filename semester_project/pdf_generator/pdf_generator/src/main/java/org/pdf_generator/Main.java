@@ -17,16 +17,34 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.rabbitmq.client.DeliverCallback;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeoutException;
+
+import org.pdf_generator.RabbitMQ_Receiver;
+
 public class Main {
 
     public static final String LOREM_IPSUM_TEXT = "Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
     public static final String GOOGLE_MAPS_PNG = "./google_maps.png";
     public static final String TARGET_PDF = "customer_01_invoice.pdf";
 
-    public static void main(String[] args ) throws IOException {
+    public static void main(String[] args ) throws IOException, TimeoutException {
 
-        int customerId = 1;
+        // get message from RabbitMQ to read customerId
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            String ReceivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            System.out.println(" [x] Received '" + ReceivedInput + "'");
+            getNameOfCustomerById(Integer.parseInt(ReceivedInput));
+            //String output = executeInternal(input);
+            //Producer.send(output, outDestination, brokerUrl);
+        };
 
+        RabbitMQ_Receiver.receive( 10000, deliverCallback);
+
+    }
+
+    private static void getNameOfCustomerById(int customerId) {
         try (Connection c = DB.connect()) {
 
             System.out.println("Connected to the PostgreSQL customer database.");
@@ -53,46 +71,68 @@ public class Main {
         } catch (SQLException se) {
             se.printStackTrace();
         }
+    }
+
+    private static Cell getHeaderCell(String s) {
+        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.GRAY);
+    }
+
+    public void createBill(String input, String filename) {
+        try {
+            PdfWriter writer = new PdfWriter(filename);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document doc = new Document(pdf);
+
+            doc.add( new Paragraph(input).setFontSize(14).setBold() );
+            doc.add( new Paragraph(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)) );
+            doc.add( new Paragraph("Cost 10€").setFontColor(ColorConstants.RED) );
+
+            doc.close();
+
+        } catch (IOException e) {
+            System.err.println("Failed to create bill " + e.getMessage());
+        }
+    }
 
 
+    /*
+    PdfWriter writer = new PdfWriter(TARGET_PDF);
+    PdfDocument pdf = new PdfDocument(writer);
+    Document document = new Document(pdf);
 
-        PdfWriter writer = new PdfWriter(TARGET_PDF);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-
-        Paragraph loremIpsumHeader = new Paragraph("Invoice")
-                .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
-                .setFontSize(14)
-                .setBold()
-                .setFontColor(ColorConstants.RED);
+    Paragraph loremIpsumHeader = new Paragraph("Invoice")
+            .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
+            .setFontSize(14)
+            .setBold()
+            .setFontColor(ColorConstants.RED);
         document.add(loremIpsumHeader);
         document.add(new Paragraph(LOREM_IPSUM_TEXT));
 
-        Paragraph listHeader = new Paragraph("Lorem Ipsum ...")
-                .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_BOLD))
-                .setFontSize(14)
-                .setBold()
-                .setFontColor(ColorConstants.BLUE);
-        List list = new List()
-                .setSymbolIndent(12)
-                .setListSymbol("\u2022")
-                .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_BOLD));
+    Paragraph listHeader = new Paragraph("Lorem Ipsum ...")
+            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_BOLD))
+            .setFontSize(14)
+            .setBold()
+            .setFontColor(ColorConstants.BLUE);
+    List list = new List()
+            .setSymbolIndent(12)
+            .setListSymbol("\u2022")
+            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_BOLD));
         list.add(new ListItem("lorem ipsum 1"))
-                .add(new ListItem("lorem ipsum 2"))
-                .add(new ListItem("lorem ipsum 3"))
-                .add(new ListItem("lorem ipsum 4"))
-                .add(new ListItem("lorem ipsum 5"))
-                .add(new ListItem("lorem ipsum 6"));
+            .add(new ListItem("lorem ipsum 2"))
+            .add(new ListItem("lorem ipsum 3"))
+            .add(new ListItem("lorem ipsum 4"))
+            .add(new ListItem("lorem ipsum 5"))
+            .add(new ListItem("lorem ipsum 6"));
         document.add(listHeader);
         document.add(list);
 
-        Paragraph tableHeader = new Paragraph("Lorem Ipsum Table ...")
-                .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN))
-                .setFontSize(18)
-                .setBold()
-                .setFontColor(ColorConstants.GREEN);
+    Paragraph tableHeader = new Paragraph("Lorem Ipsum Table ...")
+            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN))
+            .setFontSize(18)
+            .setBold()
+            .setFontColor(ColorConstants.GREEN);
         document.add(tableHeader);
-        Table table = new Table(UnitValue.createPercentArray(4)).useAllAvailableWidth();
+    Table table = new Table(UnitValue.createPercentArray(4)).useAllAvailableWidth();
         table.addHeaderCell(getHeaderCell("Ipsum 1"));
         table.addHeaderCell(getHeaderCell("Ipsum 2"));
         table.addHeaderCell(getHeaderCell("Ipsum 3"));
@@ -106,20 +146,16 @@ public class Main {
 
         document.add(new AreaBreak());
 
-        Paragraph imageHeader = new Paragraph("Lorem Ipsum Image ...")
-                .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN))
-                .setFontSize(18)
-                .setBold()
-                .setFontColor(ColorConstants.GREEN);
+    Paragraph imageHeader = new Paragraph("Lorem Ipsum Image ...")
+            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN))
+            .setFontSize(18)
+            .setBold()
+            .setFontColor(ColorConstants.GREEN);
         document.add(imageHeader);
-        ImageData imageData = ImageDataFactory.create(GOOGLE_MAPS_PNG);
+    ImageData imageData = ImageDataFactory.create(GOOGLE_MAPS_PNG);
         document.add(new Image(imageData));
 
-        document.close();
-    }
+        document.close();*/
 
-    private static Cell getHeaderCell(String s) {
-        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.GRAY);
-    }
 
 }
