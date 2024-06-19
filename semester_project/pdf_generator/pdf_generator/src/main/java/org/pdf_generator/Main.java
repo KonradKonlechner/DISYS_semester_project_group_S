@@ -21,6 +21,8 @@ import com.rabbitmq.client.DeliverCallback;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.pdf_generator.RabbitMQ_Receiver;
 
 public class Main {
@@ -33,18 +35,29 @@ public class Main {
 
         // get message from RabbitMQ to read customerId
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String ReceivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            System.out.println(" [x] Received '" + ReceivedInput + "'");
-            getNameOfCustomerById(Integer.parseInt(ReceivedInput));
-            //String output = executeInternal(input);
-            //Producer.send(output, outDestination, brokerUrl);
+            String receivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            JSONObject collectedData = new JSONObject();
+            int customerId = 0; // there exists no customer with id=0
+            double sumOfChargingEnergy = 0.0;
+            try {
+                collectedData = new JSONObject(receivedInput);
+                customerId = collectedData.getInt("CustomerId");
+                sumOfChargingEnergy = collectedData.getDouble("SumOfChargingEnergy");
+            } catch (JSONException e) {
+                System.out.print(e.getMessage());
+            }
+
+            System.out.println(" [x] Received CustomerId: " + customerId + ", Energy: " + sumOfChargingEnergy);
+            String customerName = getNameOfCustomerById(customerId);
+            String invoiceFilename = "../invoices/customer_" + customerId + "_invoice.pdf";
+            createBill(customerName, sumOfChargingEnergy, invoiceFilename);
         };
 
         RabbitMQ_Receiver.receive( 10000, deliverCallback);
 
     }
 
-    private static void getNameOfCustomerById(int customerId) {
+    private static String getNameOfCustomerById(int customerId) {
         try (Connection c = DB.connect()) {
 
             System.out.println("Connected to the PostgreSQL customer database.");
@@ -61,31 +74,34 @@ public class Main {
 
             String customerFirstName = rs.getString("first_name");
             String customerLastName = rs.getString("last_name");
+            String customerFullName = customerFirstName + " " + customerLastName;
 
             System.out.println("Vorname: " + customerFirstName + ", Nachname: " + customerLastName);
 
-            /*
-            while(rs.next()) {
-                System.out.println("Vorname: " + rs.getString("first_name") + ", Nachname: " + rs.getString("last_name"));
-            }*/
+            return customerFullName;
+
         } catch (SQLException se) {
             se.printStackTrace();
         }
+
+        return "no name available";
     }
 
-    private static Cell getHeaderCell(String s) {
-        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.GRAY);
-    }
-
-    public void createBill(String input, String filename) {
+    private static void createBill(String customerName, Double energy, String filename) {
         try {
             PdfWriter writer = new PdfWriter(filename);
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf);
 
-            doc.add( new Paragraph(input).setFontSize(14).setBold() );
-            doc.add( new Paragraph(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)) );
-            doc.add( new Paragraph("Cost 10€").setFontColor(ColorConstants.RED) );
+            doc.add( new Paragraph("Invoice").setFontSize(28).setBold() );
+            doc.add( new Paragraph("Customer Name: " + customerName).setFontSize(14).setBold() );
+            doc.add( new Paragraph("Date: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE)) );
+
+            double totalCost = energy * 0.30;
+
+            String totalCostString = String.format("%.2f", totalCost);
+
+            doc.add( new Paragraph("Cost: " + totalCostString + " €").setFontColor(ColorConstants.RED) );
 
             doc.close();
 
@@ -96,6 +112,10 @@ public class Main {
 
 
     /*
+      private static Cell getHeaderCell(String s) {
+        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.GRAY);
+    }
+
     PdfWriter writer = new PdfWriter(TARGET_PDF);
     PdfDocument pdf = new PdfDocument(writer);
     Document document = new Document(pdf);
