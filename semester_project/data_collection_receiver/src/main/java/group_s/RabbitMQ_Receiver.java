@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQ_Receiver {
     private final static String JOB_START_INFO_QUEUE_NAME = "job_started_info";
 
-    private final static String STATION_CHARGING_DATA_QUEUE_NAME = "station_charging_data ";
+    private final static String STATION_CHARGING_DATA_QUEUE_NAME = "station_charging_data";
 
     public static void receiveJobStartInfo(long timeout, DeliverCallback deliverCallback) throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
