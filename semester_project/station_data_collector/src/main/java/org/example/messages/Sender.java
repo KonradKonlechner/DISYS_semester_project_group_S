@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 
 public class Sender {
 
-    private final static String OUTPUT_QUEUE_NAME = "station_charging_data ";
+    private final static String OUTPUT_QUEUE_NAME = "station_charging_data";
 
     private final ConnectionFactory factory = new ConnectionFactory();
     private final ObjectMapper mapper = new ObjectMapper();
