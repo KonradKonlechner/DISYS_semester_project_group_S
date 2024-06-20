@@ -30,6 +30,7 @@ public class Main {
     public static final String LOREM_IPSUM_TEXT = "Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
     public static final String GOOGLE_MAPS_PNG = "./google_maps.png";
     public static final String TARGET_PDF = "customer_01_invoice.pdf";
+    public static final double PRICE_PER_ENERGY_UNIT = 0.30;
 
     public static void main(String[] args ) throws IOException, TimeoutException {
 
@@ -93,17 +94,24 @@ public class Main {
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf);
 
-            doc.add( new Paragraph("Invoice").setFontSize(28).setBold() );
-            doc.add( new Paragraph("Customer Name: " + customerName).setFontSize(14).setBold() );
+            doc.add( new Paragraph("Invoice").setFontSize(28) );
+            doc.add( new Paragraph("Customer Name: " + customerName).setFontSize(14) );
             doc.add( new Paragraph("Date: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE)) );
 
-            double totalCost = energy * 0.30;
+            String energyString = String.format("%.2f", energy);
+            doc.add( new Paragraph("Amount of consumed energy: " + energyString + " kWh"));
 
+            String rateString = String.format("%.2f", PRICE_PER_ENERGY_UNIT);
+            doc.add( new Paragraph("Rate of consumed energy: " + rateString + " €/kWh"));
+
+            double totalCost = energy * PRICE_PER_ENERGY_UNIT;
             String totalCostString = String.format("%.2f", totalCost);
 
-            doc.add( new Paragraph("Cost: " + totalCostString + " €").setFontColor(ColorConstants.RED) );
+            doc.add( new Paragraph("TOTAL: " + totalCostString + " €").setBold() );
 
             doc.close();
+
+            System.out.println("Generated pdf file: " + filename);
 
         } catch (IOException e) {
             System.err.println("Failed to create bill " + e.getMessage());
