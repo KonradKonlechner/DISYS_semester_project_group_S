@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import org.example.model.Dto.DataCollectionOutput;
-import org.example.model.Dto.JobStarterInfoOutput;
+import org.example.model.dto.DataCollectionOutput;
+import org.example.model.dto.JobStarterInfoOutput;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;

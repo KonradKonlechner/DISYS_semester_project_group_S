@@ -1,9 +1,9 @@
-package org.example.model.Dto;
+package org.example.model.dto;
 
 import java.util.List;
 
 public record JobStarterInfoOutput(
         Integer customerId,
-        List<Integer> stationIds
+        List<StationInfo> stations
 ) {
 }

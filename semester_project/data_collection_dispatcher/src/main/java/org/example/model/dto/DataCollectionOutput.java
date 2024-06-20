@@ -1,4 +1,4 @@
-package org.example.model.Dto;
+package org.example.model.dto;
 
 import java.io.Serializable;
 

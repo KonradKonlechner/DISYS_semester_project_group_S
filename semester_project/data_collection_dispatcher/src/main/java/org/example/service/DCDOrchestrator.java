@@ -1,8 +1,9 @@
 package org.example.service;
 
 import org.example.messages.Sender;
-import org.example.model.Dto.DataCollectionOutput;
-import org.example.model.Dto.JobStarterInfoOutput;
+import org.example.model.dto.DataCollectionOutput;
+import org.example.model.dto.JobStarterInfoOutput;
+import org.example.model.dto.StationInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,16 +18,16 @@ public class DCDOrchestrator {
 
     public void orchestrateDataCollectionDispatch(Integer customerId) throws IOException, TimeoutException {
 
-        List<Integer> stationIds = stationService.getStationIdsForCustomerId(customerId);
+        List<StationInfo> stations = stationService.getAllStationInformation();
 
         JobStarterInfoOutput jobStarterInfoOutput = new JobStarterInfoOutput(
                 customerId,
-                stationIds
+                stations
         );
 
         List<DataCollectionOutput> dataCollectionOutputList = mapToList(
                 customerId,
-                stationIds
+                stations
         );
 
         send(jobStarterInfoOutput, dataCollectionOutputList);

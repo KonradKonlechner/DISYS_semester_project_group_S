@@ -1,6 +1,7 @@
 package org.example.mapper;
 
-import org.example.model.Dto.DataCollectionOutput;
+import org.example.model.dto.DataCollectionOutput;
+import org.example.model.dto.StationInfo;
 
 import java.util.List;
 
@@ -8,12 +9,12 @@ public class DataCollectionOutputMapper {
 
     public static List<DataCollectionOutput> mapToList(
             Integer customerId,
-            List<Integer> stationIds
+            List<StationInfo> stationInfos
     ) {
-        return stationIds.stream()
-                .map(stationId -> new DataCollectionOutput(
+        return stationInfos.stream()
+                .map(stationInfo -> new DataCollectionOutput(
                         customerId,
-                        stationId
+                        stationInfo.stationId()
                 ))
                 .toList();
     }

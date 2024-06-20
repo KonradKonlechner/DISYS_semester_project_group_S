@@ -1,22 +1,19 @@
 package org.example.service;
 
-import java.util.ArrayList;
+import org.example.mapper.StationInfoMapper;
+import org.example.model.Station;
+import org.example.model.dto.StationInfo;
+import org.example.repositpory.connection.StationRepository;
+
 import java.util.List;
 
 public class StationService {
 
-    public List<Integer> getStationIdsForCustomerId(Integer customerId) {
-        // ToDo add real implementation and remove mock
 
-        return mock(customerId);
-    }
+    private static final StationRepository repository = new StationRepository();
 
-    private static List<Integer> mock(Integer customerId) {
-        List<Integer> mockedResultList = new ArrayList<>();
-
-        for(int i = 0; i <= customerId %3; i++) {
-            mockedResultList.add(i+1);
-        }
-        return mockedResultList;
+    public List<StationInfo> getAllStationInformation() {
+        final List<Station> stations = repository.findAllStations();
+        return stations.stream().map(StationInfoMapper::map).toList();
     }
 }
