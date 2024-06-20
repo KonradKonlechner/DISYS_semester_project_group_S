@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 public class Sender {
 
     private final static String DATA_COLLECTION_DISPATCH_QUEUE = "data_collection_dispatch";
-    private final static String JOB_STARTED_INFO_QUEUE = "job_started_info ";
+    private final static String JOB_STARTED_INFO_QUEUE = "job_started_info";
 
     private final ConnectionFactory factory = new ConnectionFactory();
     private final ObjectMapper mapper = new ObjectMapper();
