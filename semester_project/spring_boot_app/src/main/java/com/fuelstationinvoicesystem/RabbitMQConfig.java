@@ -4,6 +4,8 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+
+// ToDo: what does this class do? can be deleted?
 @Configuration
 public class RabbitMQConfig {
 
