@@ -55,8 +55,7 @@ public class Receiver {
             }
         };
 
-        channel.basicConsume(RECEIVE_QUEUE_NAME, true, deliverCallback, consumerTag -> {
-        });
+        channel.basicConsume(RECEIVE_QUEUE_NAME, true, deliverCallback, consumerTag -> {});
 
     }
 }
