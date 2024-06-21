@@ -1,42 +1,38 @@
 package org.pdf_generator;
 
-import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import com.rabbitmq.client.DeliverCallback;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.concurrent.TimeoutException;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.pdf_generator.RabbitMQ_Receiver;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.concurrent.TimeoutException;
 
 public class Main {
 
-    public static final String INVOICE_LOGO_PNG = "./invoice_logo.png";
+    public static final String INVOICE_LOGO_PNG = "semester_project/pdf_generator/invoice_logo.png";
     public static ArrayList<StationChargingRate> stationChargingRates = new ArrayList<>();
 
-    public static void main(String[] args ) throws IOException, TimeoutException {
+    public static void main(String[] args) throws IOException, TimeoutException {
 
         // initialise station charging rates
         stationChargingRates.add(new StationChargingRate(1, 0.3));
@@ -55,12 +51,11 @@ public class Main {
 
                 String customerName = getNameOfCustomerById(customerId);
 
-                if(customerName.equals("no name available")) {
+                if (customerName.equals("no name available")) {
                     System.out.println("No customer with such id!");
-                } else {
-                    String invoiceFilename = "../invoices/customer_" + customerId + "_invoice.pdf";
-                    createBill(customerId, customerName, stationChargingData, invoiceFilename);
                 }
+                String invoiceFilename = "semester_project/invoices/customer_" + customerId + "_invoice.pdf";
+                createBill(customerId, customerName, stationChargingData, invoiceFilename);
 
             } catch (JSONException e) {
                 System.out.print(e.getMessage());
@@ -68,7 +63,7 @@ public class Main {
 
         };
 
-        RabbitMQ_Receiver.receive( 10000, deliverCallback);
+        RabbitMQ_Receiver.receive(10000, deliverCallback);
 
     }
 
@@ -108,18 +103,19 @@ public class Main {
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf);
 
-            doc.add( new Paragraph("EVC Power GmbH | Höchstädtplatz 6, 1200 Wien - AUSTRIA | Tel.: +43 1 33340770 | Email: office@evc-power.com").setFontSize(10).setBorderBottom(new SolidBorder(1)) );
+            doc.add(new Paragraph("EVC Power GmbH | Höchstädtplatz 6, 1200 Wien - AUSTRIA | Tel.: +43 1 33340770 | Email: office@evc-power.com").setFontSize(10).setBorderBottom(new SolidBorder(1)));
 
             ImageData imageData = ImageDataFactory.create(INVOICE_LOGO_PNG);
             doc.add(new Image(imageData).setMaxHeight(80).setHorizontalAlignment(HorizontalAlignment.RIGHT));
 
-            doc.add( new Paragraph("INVOICE #0695/2024").setFontSize(28) );
+            doc.add(new Paragraph("INVOICE #0695/2024").setFontSize(28));
             Paragraph datePar = new Paragraph("Date: " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE));
-            datePar.setTextAlignment(TextAlignment.RIGHT);;
+            datePar.setTextAlignment(TextAlignment.RIGHT);
+            ;
             doc.add(datePar);
-            doc.add( new Paragraph("Customer ID: " + customerId).setFontSize(14) );
-            doc.add( new Paragraph("Customer Name: " + customerName).setFontSize(14) );
-            doc.add( new Paragraph("Address: 123 Electric Drive Ave., Chargington, CA, USA 94101").setFontSize(14) );
+            doc.add(new Paragraph("Customer ID: " + customerId).setFontSize(14));
+            doc.add(new Paragraph("Customer Name: " + customerName).setFontSize(14));
+            doc.add(new Paragraph("Address: 123 Electric Drive Ave., Chargington, CA, USA 94101").setFontSize(14));
 
             Table table = new Table(UnitValue.createPercentArray(4)).useAllAvailableWidth().setMarginTop(50);
             table.addHeaderCell(getHeaderCell("Charging Station ID"));
@@ -134,7 +130,7 @@ public class Main {
                 JSONObject jsonStationChargingData = (JSONObject) scd;
                 int stationId = jsonStationChargingData.getInt("stationId");
                 String stationIdString = String.format("%d", stationId);
-                double rate = stationChargingRates.stream().filter(scr -> scr.getStationId()==stationId).findFirst().get().getChargingRate();
+                double rate = stationChargingRates.stream().filter(scr -> scr.getStationId() == stationId).findFirst().get().getChargingRate();
                 String rateString = String.format("%.2f", rate).replace(",", ".");
 
                 double stationEnergyAmount = jsonStationChargingData.getDouble("chargedAmountkWh");
@@ -174,10 +170,10 @@ public class Main {
             totalPar.setTextAlignment(TextAlignment.RIGHT);
             doc.add(totalPar);
 
-            doc.add( new Paragraph("Payment is required within 14 business days of invoice date.").setBold().setMarginTop(50) );
-            doc.add( new Paragraph("Thank you!").setFontSize(26).setBold());
+            doc.add(new Paragraph("Payment is required within 14 business days of invoice date.").setBold().setMarginTop(50));
+            doc.add(new Paragraph("Thank you!").setFontSize(26).setBold());
 
-            doc.add( new Paragraph("Payment information:").setFontSize(14).setBold().setUnderline());
+            doc.add(new Paragraph("Payment information:").setFontSize(14).setBold().setUnderline());
 
             Text bankNameTitle = new Text("Bank Name: ").setBold();
             Text bankNameText = new Text("Unicredit Bank Austria AG");
