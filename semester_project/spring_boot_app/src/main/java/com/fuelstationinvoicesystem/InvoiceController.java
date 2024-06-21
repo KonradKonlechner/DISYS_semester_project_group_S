@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Date;
 
 @RestController
 @RequestMapping("/invoices")
@@ -29,7 +27,7 @@ public class InvoiceController {
 
     @GetMapping("/{customerId}")
     public ResponseEntity<Object> getInvoice(@PathVariable String customerId) {
-        String filePath = "../invoices/customer_" + customerId + "_invoice.pdf";
+        String filePath = "semester_project/invoices/customer_" + customerId + "_invoice.pdf";
         File file = new File(filePath);
         System.out.println("Checking file at: " + file.getAbsolutePath());
         if (file.exists()) {
@@ -53,32 +51,5 @@ public class InvoiceController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found for customer: " + customerId);
         }
-    }
-}
-
-class InvoiceResponse {
-    private String downloadLink;
-    private Date creationTime;
-
-    public InvoiceResponse(String downloadLink, Date creationTime) {
-        this.downloadLink = downloadLink;
-        this.creationTime = creationTime;
-    }
-
-    // Getter und Setter
-    public String getDownloadLink() {
-        return downloadLink;
-    }
-
-    public void setDownloadLink(String downloadLink) {
-        this.downloadLink = downloadLink;
-    }
-
-    public Date getCreationTime() {
-        return creationTime;
-    }
-
-    public void setCreationTime(Date creationTime) {
-        this.creationTime = creationTime;
     }
 }

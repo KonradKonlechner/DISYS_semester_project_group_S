@@ -1,29 +1,22 @@
 package org.pdf_generator;
 
-import com.itextpdf.io.font.constants.StandardFonts;
-import com.itextpdf.io.image.ImageData;
-import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.kernel.pdf.*;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.properties.UnitValue;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
+import com.itextpdf.layout.element.Paragraph;
 import com.rabbitmq.client.DeliverCallback;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeoutException;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.pdf_generator.RabbitMQ_Receiver;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeoutException;
 
 public class Main {
 

@@ -11,10 +11,12 @@
         <option value="$PROJECT_DIR$/semester_project/spring_boot_app/pom.xml" />
         <option value="$PROJECT_DIR$/semester_project/data_collection_dispatcher/pom.xml" />
         <option value="$PROJECT_DIR$/semester_project/station_data_collector/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/data_collection_receiver/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/pdf_generator/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="20" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_19" project-jdk-name="openjdk-21" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

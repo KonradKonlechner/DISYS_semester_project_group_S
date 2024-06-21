@@ -8,9 +8,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="station_data_collector" />
-        <module name="pdf_generator" />
         <module name="data_collection_dispatcher" />
+        <module name="pdf_generator" />
         <module name="javafx-app" />
+        <module name="data_collection_receiver" />
         <module name="spring-boot-app" />
       </profile>
     </annotationProcessing>
