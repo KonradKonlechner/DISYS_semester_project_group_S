@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class Main {
-    public static void main(String[] args) throws JSONException, IOException, TimeoutException, InterruptedException {
+    public static void main(String[] args) throws JSONException, IOException, TimeoutException {
 
         ArrayList<DataCollectionJob> jobs = new ArrayList<>();
 
@@ -51,7 +51,7 @@ public class Main {
             }
         };
 
-        RabbitMQ_Receiver.receiveJobStartInfo(10000, deliverCallback);
+        RabbitMQ_Receiver.receiveJobStartInfo(deliverCallback);
 
     }
 

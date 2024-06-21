@@ -2,9 +2,9 @@ package org.pdf_generator;
 
 public class StationChargingRate {
 
-    private int stationId;
+    private final int stationId;
 
-    private double chargingRate;
+    private final double chargingRate;
 
     public StationChargingRate(int stationId, double chargingRate) {
         this.stationId = stationId;

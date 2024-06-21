@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 public class Main {
@@ -63,18 +64,22 @@ public class Main {
 
         };
 
-        RabbitMQ_Receiver.receive(10000, deliverCallback);
+        RabbitMQ_Receiver.receive(deliverCallback);
 
     }
 
     private static String getNameOfCustomerById(int customerId) {
-        try (Connection c = DB.connect()) {
+        try (Connection connection = DB.connect()) {
+            if (connection == null) {
+                System.out.println("[X] System error: connection to database could not be established");
+                return "";
+            }
 
             System.out.println("Connected to the PostgreSQL customer database.");
 
             String query = "SELECT first_name, last_name FROM customer WHERE id = ?";
 
-            PreparedStatement s = c.prepareStatement(query);
+            PreparedStatement s = connection.prepareStatement(query);
 
             s.setInt(1, customerId);
 
@@ -111,7 +116,7 @@ public class Main {
             doc.add(new Paragraph("INVOICE #0695/2024").setFontSize(28));
             Paragraph datePar = new Paragraph("Date: " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE));
             datePar.setTextAlignment(TextAlignment.RIGHT);
-            ;
+
             doc.add(datePar);
             doc.add(new Paragraph("Customer ID: " + customerId).setFontSize(14));
             doc.add(new Paragraph("Customer Name: " + customerName).setFontSize(14));
@@ -130,21 +135,27 @@ public class Main {
                 JSONObject jsonStationChargingData = (JSONObject) scd;
                 int stationId = jsonStationChargingData.getInt("stationId");
                 String stationIdString = String.format("%d", stationId);
-                double rate = stationChargingRates.stream().filter(scr -> scr.getStationId() == stationId).findFirst().get().getChargingRate();
-                String rateString = String.format("%.2f", rate).replace(",", ".");
+                Optional<StationChargingRate> stationRate = stationChargingRates.stream()
+                        .filter(scr -> scr.getStationId() == stationId)
+                        .findFirst();
 
-                double stationEnergyAmount = jsonStationChargingData.getDouble("chargedAmountkWh");
-                String stationEnergyAmountString = String.format("%.2f", stationEnergyAmount).replace(",", ".");
-                double totalStationCost = stationEnergyAmount * rate;
-                String totalStationCostString = String.format("%.2f", totalStationCost).replace(",", ".");
+                if (stationRate.isPresent()) {
+                    final double chargingRate = stationRate.get().getChargingRate();
+                    String rateString = String.format("%.2f", chargingRate).replace(",", ".");
 
-                sumOfChargingEnergy += stationEnergyAmount;
-                sumOfStationCost += totalStationCost;
+                    double stationEnergyAmount = jsonStationChargingData.getDouble("chargedAmountkWh");
+                    String stationEnergyAmountString = String.format("%.2f", stationEnergyAmount).replace(",", ".");
+                    double totalStationCost = stationEnergyAmount * chargingRate;
+                    String totalStationCostString = String.format("%.2f", totalStationCost).replace(",", ".");
 
-                table.addCell(stationIdString);
-                table.addCell(stationEnergyAmountString);
-                table.addCell(rateString);
-                table.addCell(totalStationCostString);
+                    sumOfChargingEnergy += stationEnergyAmount;
+                    sumOfStationCost += totalStationCost;
+
+                    table.addCell(stationIdString);
+                    table.addCell(stationEnergyAmountString);
+                    table.addCell(rateString);
+                    table.addCell(totalStationCostString);
+                }
             }
 
             table.addCell(getFooterCell("TOTAL SUM"));
