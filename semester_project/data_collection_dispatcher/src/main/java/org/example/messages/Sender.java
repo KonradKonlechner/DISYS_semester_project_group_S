@@ -16,14 +16,21 @@ public class Sender {
     private final static String DATA_COLLECTION_DISPATCH_QUEUE = "data_collection_dispatch";
     private final static String JOB_STARTED_INFO_QUEUE = "job_started_info";
 
-    private final ConnectionFactory factory = new ConnectionFactory();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ConnectionFactory factory;
+    private final ObjectMapper mapper;
 
     public Sender() {
+        this.factory = new ConnectionFactory();
+        this.mapper = new ObjectMapper();
         factory.setHost("localhost");
         factory.setPort(30003);
     }
 
+    @SuppressWarnings("unused")
+    public Sender(ConnectionFactory factory, ObjectMapper mapper) {
+        this.factory = factory;
+        this.mapper = mapper;
+    }
 
     public void send(DataCollectionOutput output) throws IOException, TimeoutException {
 
