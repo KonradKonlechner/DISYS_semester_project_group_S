@@ -20,7 +20,7 @@ public class RabbitMQ_Receiver {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
         channel.queueDeclare(JOB_START_INFO_QUEUE_NAME, false, false, false, null);
-        System.out.println(" [*] Waiting for messages.");
+        System.out.println(" [*] Waiting for job start info messages.");
         channel.basicConsume(JOB_START_INFO_QUEUE_NAME, true, deliverCallback, consumerTag -> {});
     }
 
@@ -31,7 +31,7 @@ public class RabbitMQ_Receiver {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
         channel.queueDeclare(STATION_CHARGING_DATA_QUEUE_NAME, false, false, false, null);
-        System.out.println(" [*] Waiting for messages.");
+        System.out.println(" [*] Waiting for station charging data messages.");
         channel.basicConsume(STATION_CHARGING_DATA_QUEUE_NAME, true, deliverCallback, consumerTag -> {});
     }
 
