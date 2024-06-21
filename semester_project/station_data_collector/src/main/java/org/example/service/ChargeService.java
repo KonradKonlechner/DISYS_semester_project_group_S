@@ -7,7 +7,16 @@ import java.util.List;
 
 public class ChargeService {
 
-    private final static ChargeRepo chargeRepo = new ChargeRepo();
+    private final ChargeRepo chargeRepo;
+
+    public ChargeService() {
+        this.chargeRepo = new ChargeRepo();
+    }
+
+    @SuppressWarnings("unsed")
+    public ChargeService(ChargeRepo chargeRepo) {
+        this.chargeRepo = chargeRepo;
+    }
 
     public double getSumOfChargesFor(
             Integer customerId,

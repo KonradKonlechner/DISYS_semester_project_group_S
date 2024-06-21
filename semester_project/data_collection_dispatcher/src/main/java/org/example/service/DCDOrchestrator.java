@@ -15,8 +15,19 @@ import static org.example.mapper.DataCollectionOutputMapper.mapToList;
 
 public class DCDOrchestrator {
 
-    private final Sender sender = new Sender();
-    private final StationService stationService = new StationService();
+    private final Sender sender;
+    private final StationService stationService;
+
+    public DCDOrchestrator() {
+        this.sender = new Sender();
+        this.stationService = new StationService();
+    }
+
+    @SuppressWarnings("unused")
+    public DCDOrchestrator(Sender sender, StationService stationService) {
+        this.sender = sender;
+        this.stationService = stationService;
+    }
 
     public void orchestrateDataCollectionDispatch(Integer customerId) throws IOException, TimeoutException {
 

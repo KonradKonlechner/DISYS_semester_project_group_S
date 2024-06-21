@@ -7,21 +7,18 @@ import java.util.ArrayList;
 
 public class DataCollectionJob {
 
-    private int customerId;
+    private final int customerId;
 
-    private JSONArray stations;
+    private final ArrayList<Integer> stationIds;
 
-    private ArrayList<Integer> stationIds;
-
-    private int numOfStations;
+    private final int numOfStations;
 
     private int receivedMessageCount = 0;
 
-    private JSONArray stationChargingData = new JSONArray();
+    private final JSONArray stationChargingData = new JSONArray();
 
     public DataCollectionJob(int customerId, JSONArray stations) {
         this.customerId = customerId;
-        this.stations = stations;
         this.stationIds = new ArrayList<>();
         stations.forEach(item -> {
             JSONObject station = (JSONObject) item;
@@ -33,10 +30,6 @@ public class DataCollectionJob {
 
     public int getCustomerId() {
         return customerId;
-    }
-
-    public JSONArray getStations() {
-        return stations;
     }
 
     public ArrayList<Integer> getStationIds() {

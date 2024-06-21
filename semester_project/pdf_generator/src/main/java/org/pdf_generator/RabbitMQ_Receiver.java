@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQ_Receiver {
     private final static String QUEUE_NAME = "collected_charging_data";
 
-    public static void receive(long timeout, DeliverCallback deliverCallback) throws IOException, TimeoutException {
+    public static void receive(DeliverCallback deliverCallback) throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         factory.setPort(30003);
