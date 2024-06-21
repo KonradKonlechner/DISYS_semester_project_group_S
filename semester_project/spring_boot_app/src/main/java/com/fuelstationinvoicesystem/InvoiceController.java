@@ -29,7 +29,7 @@ public class InvoiceController {
 
     @GetMapping("/{customerId}")
     public ResponseEntity<Object> getInvoice(@PathVariable String customerId) {
-        String filePath = "semester_project/invoices/customer_" + customerId + "_invoice.pdf";
+        String filePath = "../invoices/customer_" + customerId + "_invoice.pdf";
         File file = new File(filePath);
         System.out.println("Checking file at: " + file.getAbsolutePath());
         if (file.exists()) {
