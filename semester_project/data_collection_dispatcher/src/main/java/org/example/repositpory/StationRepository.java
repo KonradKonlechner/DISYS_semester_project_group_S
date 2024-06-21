@@ -1,6 +1,7 @@
-package org.example.repositpory.connection;
+package org.example.repositpory;
 
 import org.example.model.Station;
+import org.example.repositpory.connection.DatabaseConnector;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,7 +41,7 @@ public class StationRepository {
         }
     }
 
-    private static Station mapToStation(ResultSet resultSet) throws SQLException {
+    private Station mapToStation(ResultSet resultSet) throws SQLException {
         final Integer stationId = resultSet.getInt("id");
         final String stationDbUrl = resultSet.getString("db_url");
         final String longitude = resultSet.getString("lng");

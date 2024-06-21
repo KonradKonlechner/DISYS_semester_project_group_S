@@ -1,6 +1,8 @@
 package org.example.service;
 
+import org.example.mapper.StationInfoMapper;
 import org.example.messages.Sender;
+import org.example.model.Station;
 import org.example.model.dto.DataCollectionOutput;
 import org.example.model.dto.JobStarterInfoOutput;
 import org.example.model.dto.StationInfo;
@@ -18,11 +20,12 @@ public class DCDOrchestrator {
 
     public void orchestrateDataCollectionDispatch(Integer customerId) throws IOException, TimeoutException {
 
-        List<StationInfo> stations = stationService.getAllStationInformation();
+        List<Station> stations = stationService.getAllStations();
+        List<StationInfo> stationInfos = stations.stream().map(StationInfoMapper::map).toList();
 
         JobStarterInfoOutput jobStarterInfoOutput = new JobStarterInfoOutput(
                 customerId,
-                stations
+                stationInfos
         );
 
         List<DataCollectionOutput> dataCollectionOutputList = mapToList(

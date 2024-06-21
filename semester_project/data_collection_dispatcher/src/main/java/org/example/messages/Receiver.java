@@ -13,8 +13,20 @@ import java.util.concurrent.TimeoutException;
 public class Receiver {
     private final static String RECEIVE_QUEUE_NAME = "data_collection_dispatcher_queue";
 
-    private final ConnectionFactory factory = new ConnectionFactory();
-    private final DCDOrchestrator orchestrator = new DCDOrchestrator();
+    private final ConnectionFactory factory;
+    private final DCDOrchestrator orchestrator;
+
+
+    public Receiver() {
+        this.factory = new ConnectionFactory();
+        this.orchestrator = new DCDOrchestrator();
+    }
+
+    @SuppressWarnings("unused")
+    public Receiver(ConnectionFactory factory, DCDOrchestrator orchestrator) {
+        this.factory = factory;
+        this.orchestrator = orchestrator;
+    }
 
 
     public void listen() throws IOException, TimeoutException {

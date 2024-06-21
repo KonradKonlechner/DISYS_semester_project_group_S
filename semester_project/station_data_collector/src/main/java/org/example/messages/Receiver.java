@@ -16,9 +16,22 @@ public class Receiver {
 
     private final static String RECEIVE_QUEUE_NAME = "data_collection_dispatch";
 
-    private final ConnectionFactory factory = new ConnectionFactory();
-    private final SDCOrchestrator orchestrator = new SDCOrchestrator();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ConnectionFactory factory;
+    private final SDCOrchestrator orchestrator;
+    private final ObjectMapper mapper;
+
+    public Receiver() {
+        this.factory = new ConnectionFactory();
+        this.orchestrator = new SDCOrchestrator();
+        this.mapper = new ObjectMapper();
+    }
+
+    @SuppressWarnings("unused")
+    public Receiver(ConnectionFactory factory, SDCOrchestrator orchestrator, ObjectMapper mapper) {
+        this.factory = factory;
+        this.orchestrator = orchestrator;
+        this.mapper = mapper;
+    }
 
     public void listen() throws IOException, TimeoutException {
         factory.setHost("localhost");

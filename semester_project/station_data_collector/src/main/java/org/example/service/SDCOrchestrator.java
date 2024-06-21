@@ -9,15 +9,16 @@ import java.util.concurrent.TimeoutException;
 
 public class SDCOrchestrator {
 
+    private final ChargeService chargeService = new ChargeService();
     private final Sender sender = new Sender();
     public void orchestrateStationDataCollection(DataCollectionInput input) throws IOException, TimeoutException {
-        // ToDo: implement some magic to get the data matching input
-        // FixMe: remove mock
+
+        final double summedCharges = chargeService.getSumOfChargesFor(input.customerId(), input.databaseUrl(), input.stationId());
 
         final ChargingDataOutput chargingDataOutput = new ChargingDataOutput(
                 input.customerId(),
                 input.stationId(),
-                "420.69"
+                summedCharges
         );
 
         sender.send(chargingDataOutput);
