@@ -1,50 +1,66 @@
 package org.pdf_generator;
 
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.colors.Color;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
-import com.rabbitmq.client.DeliverCallback;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.properties.HorizontalAlignment;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import com.rabbitmq.client.DeliverCallback;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.pdf_generator.RabbitMQ_Receiver;
 
 public class Main {
 
-    public static final String LOREM_IPSUM_TEXT = "Lorem ipsum dolor sit amet, consectetur adipisici elit, sed eiusmod tempor incidunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquid ex ea commodi consequat. Quis aute iure reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint obcaecat cupiditat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-    public static final String GOOGLE_MAPS_PNG = "./google_maps.png";
-    public static final String TARGET_PDF = "customer_01_invoice.pdf";
-    public static final double PRICE_PER_ENERGY_UNIT = 0.30;
+    public static final String INVOICE_LOGO_PNG = "./invoice_logo.png";
+    public static ArrayList<StationChargingRate> stationChargingRates = new ArrayList<>();
 
     public static void main(String[] args ) throws IOException, TimeoutException {
 
-        // get message from RabbitMQ to read customerId
+        // initialise station charging rates
+        stationChargingRates.add(new StationChargingRate(1, 0.3));
+        stationChargingRates.add(new StationChargingRate(2, 0.25));
+        stationChargingRates.add(new StationChargingRate(3, 0.42));
+
+        // get message from RabbitMQ to read data for invoice generation
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String receivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            JSONObject collectedData = new JSONObject();
-            int customerId = 0; // there exists no customer with id=0
-            double sumOfChargingEnergy = 0.0;
+
             try {
-                collectedData = new JSONObject(receivedInput);
-                customerId = collectedData.getInt("CustomerId");
-                sumOfChargingEnergy = collectedData.getDouble("SumOfChargingEnergy");
+                JSONObject collectedData = new JSONObject(receivedInput);
+                int customerId = collectedData.getInt("CustomerId");
+
+                JSONArray stationChargingData = (JSONArray) collectedData.get("StationChargingData");
+
+                String customerName = getNameOfCustomerById(customerId);
+                String invoiceFilename = "../invoices/customer_" + customerId + "_invoice.pdf";
+                createBill(customerId, customerName, stationChargingData, invoiceFilename);
+
             } catch (JSONException e) {
                 System.out.print(e.getMessage());
             }
 
-            System.out.println(" [x] Received CustomerId: " + customerId + ", Energy: " + sumOfChargingEnergy);
-            String customerName = getNameOfCustomerById(customerId);
-            String invoiceFilename = "../invoices/customer_" + customerId + "_invoice.pdf";
-            createBill(customerName, sumOfChargingEnergy, invoiceFilename);
         };
 
         RabbitMQ_Receiver.receive( 10000, deliverCallback);
@@ -81,26 +97,94 @@ public class Main {
         return "no name available";
     }
 
-    private static void createBill(String customerName, Double energy, String filename) {
+    private static void createBill(int customerId, String customerName, JSONArray stationChargingData, String filename) {
         try {
             PdfWriter writer = new PdfWriter(filename);
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf);
 
-            doc.add( new Paragraph("Invoice").setFontSize(28) );
+            doc.add( new Paragraph("EVC Power GmbH | Höchstädtplatz 6, 1200 Wien - AUSTRIA | Tel.: +43 1 33340770 | Email: office@evc-power.com").setFontSize(10).setBorderBottom(new SolidBorder(1)) );
+
+            ImageData imageData = ImageDataFactory.create(INVOICE_LOGO_PNG);
+            doc.add(new Image(imageData).setMaxHeight(80).setHorizontalAlignment(HorizontalAlignment.RIGHT));
+
+            doc.add( new Paragraph("INVOICE #0695/2024").setFontSize(28) );
+            Paragraph datePar = new Paragraph("Date: " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE));
+            datePar.setTextAlignment(TextAlignment.RIGHT);;
+            doc.add(datePar);
+            doc.add( new Paragraph("Customer ID: " + customerId).setFontSize(14) );
             doc.add( new Paragraph("Customer Name: " + customerName).setFontSize(14) );
-            doc.add( new Paragraph("Date: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE)) );
+            doc.add( new Paragraph("Address: 123 Electric Drive Ave., Chargington, CA, USA 94101").setFontSize(14) );
 
-            String energyString = String.format("%.2f", energy);
-            doc.add( new Paragraph("Amount of consumed energy: " + energyString + " kWh"));
+            Table table = new Table(UnitValue.createPercentArray(4)).useAllAvailableWidth().setMarginTop(50);
+            table.addHeaderCell(getHeaderCell("Charging Station ID"));
+            table.addHeaderCell(getHeaderCell("Consumed Energy (kWh)"));
+            table.addHeaderCell(getHeaderCell("Rate (€/kWh)"));
+            table.addHeaderCell(getHeaderCell("Total EUR"));
 
-            String rateString = String.format("%.2f", PRICE_PER_ENERGY_UNIT);
-            doc.add( new Paragraph("Rate of consumed energy: " + rateString + " €/kWh"));
+            double sumOfChargingEnergy = 0.0;
+            double sumOfStationCost = 0.0;
 
-            double totalCost = energy * PRICE_PER_ENERGY_UNIT;
-            String totalCostString = String.format("%.2f", totalCost);
+            for (Object scd : stationChargingData) {
+                JSONObject jsonStationChargingData = (JSONObject) scd;
+                int stationId = jsonStationChargingData.getInt("stationId");
+                String stationIdString = String.format("%d", stationId);
+                double rate = stationChargingRates.stream().filter(scr -> scr.getStationId()==stationId).findFirst().get().getChargingRate();
+                String rateString = String.format("%.2f", rate).replace(",", ".");
 
-            doc.add( new Paragraph("TOTAL: " + totalCostString + " €").setBold() );
+                double stationEnergyAmount = jsonStationChargingData.getDouble("chargedAmountkWh");
+                String stationEnergyAmountString = String.format("%.2f", stationEnergyAmount).replace(",", ".");
+                double totalStationCost = stationEnergyAmount * rate;
+                String totalStationCostString = String.format("%.2f", totalStationCost).replace(",", ".");
+
+                sumOfChargingEnergy += stationEnergyAmount;
+                sumOfStationCost += totalStationCost;
+
+                table.addCell(stationIdString);
+                table.addCell(stationEnergyAmountString);
+                table.addCell(rateString);
+                table.addCell(totalStationCostString);
+            }
+
+            table.addCell(getFooterCell("TOTAL SUM"));
+
+            String energyString = String.format("%.2f", sumOfChargingEnergy).replace(",", ".");
+
+            table.addCell(getFooterCell(energyString));
+
+            table.addCell(getFooterCell(""));
+
+            String totalCostString = String.format("%.2f", sumOfStationCost).replace(",", ".");
+
+            table.addCell(getFooterCell(totalCostString));
+
+            doc.add(table);
+
+            System.out.println(" [x] Generating invoice pdf for CustomerId: " + customerId + ", Total Energy: " + energyString + "kWh, Total Cost: " + totalCostString + " €");
+
+            Paragraph totalPar = new Paragraph("TOTAL: " + totalCostString + " EUR");
+            totalPar.setMarginTop(20);
+            totalPar.setFontSize(16);
+            totalPar.setBold();
+            totalPar.setTextAlignment(TextAlignment.RIGHT);
+            doc.add(totalPar);
+
+            doc.add( new Paragraph("Payment is required within 14 business days of invoice date.").setBold().setMarginTop(50) );
+            doc.add( new Paragraph("Thank you!").setFontSize(26).setBold());
+
+            doc.add( new Paragraph("Payment information:").setFontSize(14).setBold().setUnderline());
+
+            Text bankNameTitle = new Text("Bank Name: ").setBold();
+            Text bankNameText = new Text("Unicredit Bank Austria AG");
+            Paragraph bankNamePar = new Paragraph().add(bankNameTitle).add(bankNameText);
+
+            doc.add(bankNamePar);
+
+            Text bankAccountTitle = new Text("Bank Account: ").setBold();
+            Text bankAccountText = new Text("IBAN: AT01 1000 1000 0111 1234, BIC: BABAAT11XXX");
+            Paragraph bankAccountPar = new Paragraph().add(bankAccountTitle).add(bankAccountText);
+
+            doc.add(bankAccountPar);
 
             doc.close();
 
@@ -111,72 +195,11 @@ public class Main {
         }
     }
 
-
-    /*
-      private static Cell getHeaderCell(String s) {
-        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.GRAY);
+    private static Cell getHeaderCell(String s) {
+        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.GREEN);
     }
 
-    PdfWriter writer = new PdfWriter(TARGET_PDF);
-    PdfDocument pdf = new PdfDocument(writer);
-    Document document = new Document(pdf);
-
-    Paragraph loremIpsumHeader = new Paragraph("Invoice")
-            .setFont(PdfFontFactory.createFont(StandardFonts.HELVETICA))
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(ColorConstants.RED);
-        document.add(loremIpsumHeader);
-        document.add(new Paragraph(LOREM_IPSUM_TEXT));
-
-    Paragraph listHeader = new Paragraph("Lorem Ipsum ...")
-            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_BOLD))
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(ColorConstants.BLUE);
-    List list = new List()
-            .setSymbolIndent(12)
-            .setListSymbol("\u2022")
-            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_BOLD));
-        list.add(new ListItem("lorem ipsum 1"))
-            .add(new ListItem("lorem ipsum 2"))
-            .add(new ListItem("lorem ipsum 3"))
-            .add(new ListItem("lorem ipsum 4"))
-            .add(new ListItem("lorem ipsum 5"))
-            .add(new ListItem("lorem ipsum 6"));
-        document.add(listHeader);
-        document.add(list);
-
-    Paragraph tableHeader = new Paragraph("Lorem Ipsum Table ...")
-            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN))
-            .setFontSize(18)
-            .setBold()
-            .setFontColor(ColorConstants.GREEN);
-        document.add(tableHeader);
-    Table table = new Table(UnitValue.createPercentArray(4)).useAllAvailableWidth();
-        table.addHeaderCell(getHeaderCell("Ipsum 1"));
-        table.addHeaderCell(getHeaderCell("Ipsum 2"));
-        table.addHeaderCell(getHeaderCell("Ipsum 3"));
-        table.addHeaderCell(getHeaderCell("Ipsum 4"));
-        table.setFontSize(14).setBackgroundColor(ColorConstants.WHITE);
-        table.addCell("lorem 1");
-        table.addCell("lorem 2");
-        table.addCell("lorem 3");
-        table.addCell("lorem 4");
-        document.add(table);
-
-        document.add(new AreaBreak());
-
-    Paragraph imageHeader = new Paragraph("Lorem Ipsum Image ...")
-            .setFont(PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN))
-            .setFontSize(18)
-            .setBold()
-            .setFontColor(ColorConstants.GREEN);
-        document.add(imageHeader);
-    ImageData imageData = ImageDataFactory.create(GOOGLE_MAPS_PNG);
-        document.add(new Image(imageData));
-
-        document.close();*/
-
-
+    private static Cell getFooterCell(String s) {
+        return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
+    }
 }
