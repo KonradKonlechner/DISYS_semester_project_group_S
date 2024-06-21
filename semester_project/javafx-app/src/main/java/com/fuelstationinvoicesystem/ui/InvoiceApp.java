@@ -17,11 +17,15 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class InvoiceApp extends Application {
 
     private TextField customerIdField;
     private Label statusLabel;
+    private ScheduledExecutorService scheduler;
 
     public static void main(String[] args) {
         launch(args);
@@ -57,6 +61,8 @@ public class InvoiceApp extends Application {
             statusLabel.setText("Customer ID cannot be empty");
             return;
         }
+        stopScheduler();
+
 
         new Thread(() -> {
             HttpURLConnection connection = null;
@@ -76,6 +82,7 @@ public class InvoiceApp extends Application {
                 Platform.runLater(() -> {
                     if (responseCode == 200) {
                         statusLabel.setText("Invoice generation started for customer: " + customerId);
+                        startCheckingInvoiceAvailability(customerId);
                     } else {
                         statusLabel.setText("Failed to start invoice generation: " + responseCode);
                     }
@@ -90,6 +97,50 @@ public class InvoiceApp extends Application {
         }).start();
     }
 
+    private void startCheckingInvoiceAvailability(String customerId) {
+        scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> checkInvoiceAvailability(customerId), 0, 5, TimeUnit.SECONDS);
+    }
+    private void checkInvoiceAvailability(String customerId) {
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL("http://localhost:8080/invoices/" + customerId);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+
+                int responseCode = connection.getResponseCode();
+
+                if (responseCode == 200) {
+                    Platform.runLater(() -> {
+                        statusLabel.setText("Invoice ready for download for customer: " + customerId);
+                        scheduler.shutdown();
+                    });
+                } else if (responseCode == 404) {
+                    Platform.runLater(() -> statusLabel.setText("Invoice not yet ready for customer: " + customerId));
+                } else {
+                    Platform.runLater(() -> statusLabel.setText("Error checking invoice: " + responseCode));
+                }
+            } catch (Exception e) {
+                Platform.runLater(() -> statusLabel.setText("Error: " + e.getMessage()));
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }).start();
+    }
+
+    private void stopScheduler() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdownNow();
+            try {
+                scheduler.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     private void downloadInvoice() {
         String customerId = customerIdField.getText();
         if (customerId.isEmpty()) {
@@ -137,4 +188,9 @@ public class InvoiceApp extends Application {
             }
         }).start();
     }
+    @Override
+public void stop() {
+        stopScheduler();
+}
+
 }
