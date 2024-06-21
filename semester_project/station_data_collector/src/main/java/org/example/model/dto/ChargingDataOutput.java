@@ -5,6 +5,6 @@ import java.io.Serializable;
 public record ChargingDataOutput(
         Integer customerId,
         Integer stationId,
-        Double summedChargedAmountkWh
+        Double chargedAmountkWh
 ) implements Serializable {
 }
