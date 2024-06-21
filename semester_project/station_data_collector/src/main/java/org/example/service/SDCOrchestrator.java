@@ -9,8 +9,20 @@ import java.util.concurrent.TimeoutException;
 
 public class SDCOrchestrator {
 
-    private final ChargeService chargeService = new ChargeService();
-    private final Sender sender = new Sender();
+    private final ChargeService chargeService;
+    private final Sender sender;
+
+    public SDCOrchestrator() {
+        this.chargeService = new ChargeService();
+        this.sender = new Sender();
+    }
+
+    @SuppressWarnings("unused")
+    public SDCOrchestrator(ChargeService chargeService, Sender sender) {
+        this.chargeService = chargeService;
+        this.sender = sender;
+    }
+
     public void orchestrateStationDataCollection(DataCollectionInput input) throws IOException, TimeoutException {
 
         final double summedCharges = chargeService.getSumOfChargesFor(input.customerId(), input.databaseUrl(), input.stationId());
