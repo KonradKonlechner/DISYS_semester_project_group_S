@@ -4,5 +4,6 @@ import java.io.Serializable;
 
 public record DataCollectionOutput(
         Integer customerId,
-        Integer stationId
+        Integer stationId,
+        String databaseUrl
 ) implements Serializable {}
