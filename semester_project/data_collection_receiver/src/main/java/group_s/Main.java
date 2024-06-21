@@ -18,10 +18,6 @@ public class Main {
 
         receiveJobs(jobs);
 
-        while (jobs.isEmpty()) {
-            TimeUnit.SECONDS.sleep(1);
-        }
-
         receiveStationData(jobs);
 
     }
@@ -30,9 +26,11 @@ public class Main {
 
         // get message from RabbitMQ to read job info
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+
             String receivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
 
             try {
+
                 JSONObject jobStartInfo = new JSONObject(receivedInput);
                 int customerId = jobStartInfo.getInt("customerId");
                 JSONArray stations = (JSONArray) jobStartInfo.get("stations");
@@ -64,6 +62,11 @@ public class Main {
             String receivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
 
             try {
+                // Wait until jobs are created
+                while (jobs.isEmpty()) {
+                    TimeUnit.SECONDS.sleep(1);
+                }
+
                 JSONObject stationChargingData = new JSONObject(receivedInput);
                 int customerId = stationChargingData.getInt("customerId");
                 int stationId = stationChargingData.getInt("stationId");
@@ -77,7 +80,7 @@ public class Main {
                         job.addStationChargingData(stationChargingData);
                         job.increaseMessageCount();
                         if (job.getReceivedMessageCount() == job.getNumOfStations()) {
-                            sendJobData(job);
+                            sendJobData(job.getCustomerId(), job.getStationChargingData());
                             doneJobs.add(job);
                         }
                     }
@@ -85,7 +88,7 @@ public class Main {
 
                 jobs.removeAll(doneJobs);
 
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 System.out.print(e.getMessage());
             }
         };
@@ -94,12 +97,12 @@ public class Main {
 
     }
 
-    private static void sendJobData(DataCollectionJob job) {
+    private static void sendJobData(int customerId, JSONArray stationChargingData) {
 
         JSONObject collectedData = new JSONObject();
-        int customerId = job.getCustomerId();
+
         collectedData.put("CustomerId", customerId);
-        collectedData.put("StationChargingData", job.getStationChargingData());
+        collectedData.put("StationChargingData", stationChargingData);
 
         RabbitMQ_Sender.sendCollectedData(collectedData);
 

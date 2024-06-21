@@ -54,8 +54,13 @@ public class Main {
                 JSONArray stationChargingData = (JSONArray) collectedData.get("StationChargingData");
 
                 String customerName = getNameOfCustomerById(customerId);
-                String invoiceFilename = "../invoices/customer_" + customerId + "_invoice.pdf";
-                createBill(customerId, customerName, stationChargingData, invoiceFilename);
+
+                if(customerName.equals("no name available")) {
+                    System.out.println("No customer with such id!");
+                } else {
+                    String invoiceFilename = "../invoices/customer_" + customerId + "_invoice.pdf";
+                    createBill(customerId, customerName, stationChargingData, invoiceFilename);
+                }
 
             } catch (JSONException e) {
                 System.out.print(e.getMessage());
