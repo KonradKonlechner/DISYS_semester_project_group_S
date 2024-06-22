@@ -78,13 +78,18 @@ public class PdfGenRepository {
             System.out.println("No customer with such id!");
         }
 
-        // define path where to store pdf document file
+        // define path where to store pdf document and where to find logo image file
         String currentDirPath = System.getProperty("user.dir");
-        String[] splitPathString = currentDirPath.split("semester_project");
-        String invoiceFilePath = splitPathString[0] + "semester_project" + "\\invoices\\customer_" + customerId + "_invoice.pdf";
-
-        // define path where to find logo image
-        String logoImageFilePath = splitPathString[0] + "semester_project" + INVOICE_LOGO_PATH_SUFFIX;
+        String invoiceFilePath = "";
+        String logoImageFilePath = "";
+        if(currentDirPath.contains("semester_project")) {
+            String[] splitPathString = currentDirPath.split("semester_project");
+            invoiceFilePath = splitPathString[0] + "semester_project" + "\\invoices\\customer_" + customerId + "_invoice.pdf";
+            logoImageFilePath = splitPathString[0] + "semester_project" + INVOICE_LOGO_PATH_SUFFIX;
+        } else {
+            invoiceFilePath = currentDirPath + "\\semester_project\\invoices\\customer_" + customerId + "_invoice.pdf";
+            logoImageFilePath = currentDirPath + "\\semester_project" + INVOICE_LOGO_PATH_SUFFIX;
+        }
 
         // generation of pdf document
         try {
