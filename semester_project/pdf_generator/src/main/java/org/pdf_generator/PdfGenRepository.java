@@ -30,7 +30,7 @@ public class PdfGenRepository {
 
     public static final String INVOICE_LOGO_PATH_SUFFIX = "\\pdf_generator\\invoice_logo.png";
 
-    public static String getNameOfCustomerById(int customerId) {
+    public String getNameOfCustomerById(int customerId) {
         try (Connection connection = DB.connect()) {
             if (connection == null) {
                 System.out.println("[X] System error: connection to database could not be established");
@@ -64,7 +64,7 @@ public class PdfGenRepository {
         return "no name available";
     }
 
-    public static void createBill(int customerId, JSONArray stationChargingData) {
+    public void createBill(int customerId, JSONArray stationChargingData) {
 
         // initialise station charging rates
         stationChargingRates.add(new StationChargingRate(1, 0.3));

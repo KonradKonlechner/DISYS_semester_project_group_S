@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PdfGeneratorTest {
 
+    PdfGenRepository pdfGenRepository = new PdfGenRepository();
+
     @Test
     void getNameOfCustomerById_whenCustomerExists_thenCheckName() {
 
@@ -21,7 +23,7 @@ class PdfGeneratorTest {
         int customerId = 1;
 
         // Act
-        String customerName = PdfGenRepository.getNameOfCustomerById(customerId);
+        String customerName = pdfGenRepository.getNameOfCustomerById(customerId);
 
         boolean result = (customerName.equals("Luisa Colon"));
 
@@ -36,7 +38,7 @@ class PdfGeneratorTest {
         int customerId = 4;
 
         // Act
-        String customerName = PdfGenRepository.getNameOfCustomerById(customerId);
+        String customerName = pdfGenRepository.getNameOfCustomerById(customerId);
 
         boolean result = (customerName.equals("no name available"));
 
@@ -72,7 +74,7 @@ class PdfGeneratorTest {
         stationChargingData.put(station3Data);
 
         // Act
-        PdfGenRepository.createBill(customerId, stationChargingData);
+        pdfGenRepository.createBill(customerId, stationChargingData);
 
         String currentDirPath = System.getProperty("user.dir");
         String[] splitPathString = currentDirPath.split("semester_project");

@@ -16,18 +16,22 @@ public class RabbitMQ_Receiver {
 
     private final static String QUEUE_NAME = "collected_charging_data";
 
-    public static void receive(DeliverCallback deliverCallback) throws IOException, TimeoutException {
-        ConnectionFactory factory = new ConnectionFactory();
+    private final ConnectionFactory factory;
+    private final PdfGenRepository pdfGenRepository;
+
+    public RabbitMQ_Receiver() {
+        this.factory = new ConnectionFactory();
+        this.pdfGenRepository = new PdfGenRepository();
+    }
+
+    public void listen() throws IOException, TimeoutException {
+
         factory.setHost("localhost");
         factory.setPort(30003);
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         System.out.println(" [*] Waiting for messages.");
-        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {});
-    }
-
-    public static void listen() throws IOException, TimeoutException {
 
         // get message from RabbitMQ to read data for invoice generation
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -40,7 +44,7 @@ public class RabbitMQ_Receiver {
 
                 JSONArray stationChargingData = (JSONArray) collectedData.get("StationChargingData");
 
-                PdfGenRepository.createBill(customerId, stationChargingData);
+                pdfGenRepository.createBill(customerId, stationChargingData);
 
             } catch (JSONException e) {
                 System.out.print(e.getMessage());
@@ -48,7 +52,7 @@ public class RabbitMQ_Receiver {
 
         };
 
-        receive(deliverCallback);
+        channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> {});
     }
 
 }

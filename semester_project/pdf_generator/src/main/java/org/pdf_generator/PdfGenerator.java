@@ -8,7 +8,9 @@ public class PdfGenerator {
 
     public static void main(String[] args) throws IOException, TimeoutException {
 
-       RabbitMQ_Receiver.listen();
+        RabbitMQ_Receiver receiver = new RabbitMQ_Receiver();
+
+        receiver.listen();
 
     }
 
