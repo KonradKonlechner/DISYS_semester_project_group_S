@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class Main {
+public class DataCollectionReceiver {
     public static void main(String[] args) throws JSONException, IOException, TimeoutException {
 
         ArrayList<DataCollectionJob> jobs = new ArrayList<>();

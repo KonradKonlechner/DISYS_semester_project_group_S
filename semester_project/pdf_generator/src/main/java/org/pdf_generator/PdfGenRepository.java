@@ -11,13 +11,10 @@ import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.rabbitmq.client.DeliverCallback;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,49 +23,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 
-public class Main {
+public class PdfGenRepository {
 
-    public static final String INVOICE_LOGO_PNG = "semester_project/pdf_generator/invoice_logo.png";
     public static ArrayList<StationChargingRate> stationChargingRates = new ArrayList<>();
 
-    public static void main(String[] args) throws IOException, TimeoutException {
+    public static final String INVOICE_LOGO_PATH_SUFFIX = "\\pdf_generator\\invoice_logo.png";
 
-        // initialise station charging rates
-        stationChargingRates.add(new StationChargingRate(1, 0.3));
-        stationChargingRates.add(new StationChargingRate(2, 0.25));
-        stationChargingRates.add(new StationChargingRate(3, 0.42));
-
-        // get message from RabbitMQ to read data for invoice generation
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String receivedInput = new String(delivery.getBody(), StandardCharsets.UTF_8);
-
-            try {
-                JSONObject collectedData = new JSONObject(receivedInput);
-                int customerId = collectedData.getInt("CustomerId");
-
-                JSONArray stationChargingData = (JSONArray) collectedData.get("StationChargingData");
-
-                String customerName = getNameOfCustomerById(customerId);
-
-                if (customerName.equals("no name available")) {
-                    System.out.println("No customer with such id!");
-                }
-                String invoiceFilename = "semester_project/invoices/customer_" + customerId + "_invoice.pdf";
-                createBill(customerId, customerName, stationChargingData, invoiceFilename);
-
-            } catch (JSONException e) {
-                System.out.print(e.getMessage());
-            }
-
-        };
-
-        RabbitMQ_Receiver.receive(deliverCallback);
-
-    }
-
-    private static String getNameOfCustomerById(int customerId) {
+    public static String getNameOfCustomerById(int customerId) {
         try (Connection connection = DB.connect()) {
             if (connection == null) {
                 System.out.println("[X] System error: connection to database could not be established");
@@ -91,26 +53,48 @@ public class Main {
             String customerLastName = rs.getString("last_name");
             String customerFullName = customerFirstName + " " + customerLastName;
 
-            System.out.println("Vorname: " + customerFirstName + ", Nachname: " + customerLastName);
+            System.out.println("Query result from database -> first name: " + customerFirstName + ", last name: " + customerLastName);
 
             return customerFullName;
 
         } catch (SQLException se) {
-            se.printStackTrace();
+            System.out.println("### ATTENTION! A SQLException has been thrown!");
         }
 
         return "no name available";
     }
 
-    private static void createBill(int customerId, String customerName, JSONArray stationChargingData, String filename) {
+    public static void createBill(int customerId, JSONArray stationChargingData) {
+
+        // initialise station charging rates
+        stationChargingRates.add(new StationChargingRate(1, 0.3));
+        stationChargingRates.add(new StationChargingRate(2, 0.25));
+        stationChargingRates.add(new StationChargingRate(3, 0.42));
+
+        // get full customer name from database
+        String customerName = getNameOfCustomerById(customerId);
+
+        if (customerName.equals("no name available")) {
+            System.out.println("No customer with such id!");
+        }
+
+        // define path where to store pdf document file
+        String currentDirPath = System.getProperty("user.dir");
+        String[] splitPathString = currentDirPath.split("semester_project");
+        String invoiceFilePath = splitPathString[0] + "semester_project" + "\\invoices\\customer_" + customerId + "_invoice.pdf";
+
+        // define path where to find logo image
+        String logoImageFilePath = splitPathString[0] + "semester_project" + INVOICE_LOGO_PATH_SUFFIX;
+
+        // generation of pdf document
         try {
-            PdfWriter writer = new PdfWriter(filename);
+            PdfWriter writer = new PdfWriter(invoiceFilePath);
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf);
 
             doc.add(new Paragraph("EVC Power GmbH | Höchstädtplatz 6, 1200 Wien - AUSTRIA | Tel.: +43 1 33340770 | Email: office@evc-power.com").setFontSize(10).setBorderBottom(new SolidBorder(1)));
 
-            ImageData imageData = ImageDataFactory.create(INVOICE_LOGO_PNG);
+            ImageData imageData = ImageDataFactory.create(logoImageFilePath);
             doc.add(new Image(imageData).setMaxHeight(80).setHorizontalAlignment(HorizontalAlignment.RIGHT));
 
             doc.add(new Paragraph("INVOICE #0695/2024").setFontSize(28));
@@ -200,7 +184,7 @@ public class Main {
 
             doc.close();
 
-            System.out.println("Generated pdf file: " + filename);
+            System.out.println("Generated pdf file: " + invoiceFilePath);
 
         } catch (IOException e) {
             System.err.println("Failed to create bill " + e.getMessage());
@@ -214,4 +198,5 @@ public class Main {
     private static Cell getFooterCell(String s) {
         return new Cell().add(new Paragraph(s)).setBold().setBackgroundColor(ColorConstants.LIGHT_GRAY);
     }
+
 }
