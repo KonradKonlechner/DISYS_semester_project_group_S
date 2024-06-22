@@ -27,11 +27,15 @@ public class InvoiceController {
 
     @GetMapping("/{customerId}")
     public ResponseEntity<Object> getInvoice(@PathVariable String customerId) {
+        // Pfad zur Rechnungsdatei basierend auf der Kunden-ID
         String filePath = "semester_project/invoices/customer_" + customerId + "_invoice.pdf";
         File file = new File(filePath);
         System.out.println("Checking file at: " + file.getAbsolutePath());
+
+        // Überprüfen, ob die Rechnungsdatei existiert
         if (file.exists()) {
             try {
+                // Erstellen einer InputStreamResource für die Rechnungsdatei
                 InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", file.getName()));
@@ -39,6 +43,7 @@ public class InvoiceController {
                 headers.add("Pragma", "no-cache");
                 headers.add("Expires", "0");
 
+                // Rückgabe der Datei mit den entsprechenden HTTP-Headern und Status 200 OK
                 return ResponseEntity.ok()
                         .headers(headers)
                         .contentLength(file.length())
