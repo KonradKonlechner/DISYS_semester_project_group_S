@@ -1,7 +1,35 @@
 # Distributed Systems Semester Project
-An example setup for a Distributed Systems project. It contains five databases (PostgreSQL) with example data and a messaging queue (RabbitMQ).
+
+## Documentation
+- For a more in depth documentation and installation and user guide, please visit our [confluence page](https://webentwicklungsprojekt.atlassian.net/wiki/spaces/DP/overview)
+- [RabbitMQ](https://www.rabbitmq.com/tutorials/tutorial-one-java.html)
 
 ## Services
+- javafx-app
+  - contains the GUI
+  - communicates with backend service spring_boot_app via REST APIs
+- spring_boot_app
+  - handles REST Requests from the GUI 
+  - sends messages to the appropriate backend services
+  - listens for messages that indicate backend task completion
+- data_collection_dispatcher
+  - receives a customerId
+  - sends queues that indicates what backend data collection jobs have been started
+  - sends queues that start backend data collection jobs
+- station_data_collector
+  - receives data on a customer and station and finds all charging data related to this customer and this station
+  - sends this data as a queue message
+- data_collection_receiver
+  - receives data on customer, stations and charges
+  - this data is sorted and packaged for further processing
+  - sends packaged data
+- pdf_generator
+  - receives packaged customer charging data
+  - retrieves further customer information from database
+  - generates a pdf invoice
+  - sends job completion message queue
+
+## Database and queues
 - Customer Database
 	- Contains customer data (id, first name, last name)
 	- URL: localhost:30001
@@ -32,4 +60,3 @@ docker-compose up
 
 
 ## Documentations
-- [RabbitMQ](https://www.rabbitmq.com/tutorials/tutorial-one-java.html)
