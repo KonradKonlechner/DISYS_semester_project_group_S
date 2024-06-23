@@ -2,7 +2,6 @@ package group_s;
 
 import com.rabbitmq.client.DeliverCallback;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -11,18 +10,9 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class Main {
-    public static void main(String[] args) throws JSONException, IOException, TimeoutException {
+public class DCRRepository {
 
-        ArrayList<DataCollectionJob> jobs = new ArrayList<>();
-
-        receiveJobs(jobs);
-
-        receiveStationData(jobs);
-
-    }
-
-    private static void receiveJobs(ArrayList<DataCollectionJob> jobs) throws IOException, TimeoutException {
+    public void receiveJobs(ArrayList<DataCollectionJob> jobs) throws IOException, TimeoutException {
 
         // get message from RabbitMQ to read job info
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -51,11 +41,13 @@ public class Main {
             }
         };
 
-        RabbitMQ_Receiver.receiveJobStartInfo(deliverCallback);
+        RabbitMQ_Receiver receiver = new RabbitMQ_Receiver();
+
+        receiver.receiveJobStartInfo(deliverCallback);
 
     }
 
-    private static void receiveStationData(ArrayList<DataCollectionJob> jobs) throws IOException, TimeoutException {
+    public void receiveStationData(ArrayList<DataCollectionJob> jobs) throws IOException, TimeoutException {
 
         // get message from RabbitMQ to read station charging data
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -93,21 +85,24 @@ public class Main {
             }
         };
 
-        RabbitMQ_Receiver.receiveStationChargingData(10000, deliverCallback);
+        RabbitMQ_Receiver receiver = new RabbitMQ_Receiver();
+
+        receiver.receiveStationChargingData(deliverCallback);
 
     }
 
-    private static void sendJobData(int customerId, JSONArray stationChargingData) {
+    public void sendJobData(int customerId, JSONArray stationChargingData) {
 
         JSONObject collectedData = new JSONObject();
 
         collectedData.put("CustomerId", customerId);
         collectedData.put("StationChargingData", stationChargingData);
 
-        RabbitMQ_Sender.sendCollectedData(collectedData);
+        RabbitMQ_Sender sender = new RabbitMQ_Sender();
+
+        sender.sendCollectedData(collectedData);
 
         System.out.println("Sent charging data to RabbitMQ - job for CustomerId: " + customerId);
 
     }
-
 }
