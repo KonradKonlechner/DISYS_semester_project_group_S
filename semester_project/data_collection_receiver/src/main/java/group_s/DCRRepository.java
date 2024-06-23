@@ -12,6 +12,21 @@ import java.util.concurrent.TimeoutException;
 
 public class DCRRepository {
 
+    private final RabbitMQ_Receiver receiver;
+
+    private final RabbitMQ_Sender sender;
+
+    public DCRRepository() {
+        this.receiver = new RabbitMQ_Receiver();
+        this.sender = new RabbitMQ_Sender();
+    }
+
+    @SuppressWarnings("unused")
+    public DCRRepository(RabbitMQ_Receiver receiver, RabbitMQ_Sender sender) {
+        this.receiver = receiver;
+        this.sender = sender;
+    }
+
     public void receiveJobs(ArrayList<DataCollectionJob> jobs) throws IOException, TimeoutException {
 
         // get message from RabbitMQ to read job info
@@ -40,8 +55,6 @@ public class DCRRepository {
                 System.out.print(e.getMessage());
             }
         };
-
-        RabbitMQ_Receiver receiver = new RabbitMQ_Receiver();
 
         receiver.receiveJobStartInfo(deliverCallback);
 
@@ -85,8 +98,6 @@ public class DCRRepository {
             }
         };
 
-        RabbitMQ_Receiver receiver = new RabbitMQ_Receiver();
-
         receiver.receiveStationChargingData(deliverCallback);
 
     }
@@ -97,8 +108,6 @@ public class DCRRepository {
 
         collectedData.put("CustomerId", customerId);
         collectedData.put("StationChargingData", stationChargingData);
-
-        RabbitMQ_Sender sender = new RabbitMQ_Sender();
 
         sender.sendCollectedData(collectedData);
 

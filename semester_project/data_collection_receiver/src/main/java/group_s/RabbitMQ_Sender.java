@@ -13,8 +13,15 @@ public class RabbitMQ_Sender {
 
     public RabbitMQ_Sender() {
         this.factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        factory.setPort(30003);
+        this.factory.setHost("localhost");
+        this.factory.setPort(30003);
+    }
+
+    @SuppressWarnings("unused")
+    public RabbitMQ_Sender(ConnectionFactory factory) {
+        this.factory = factory;
+        this.factory.setHost("localhost");
+        this.factory.setPort(30003);
     }
 
     public void sendCollectedData(JSONObject data) {

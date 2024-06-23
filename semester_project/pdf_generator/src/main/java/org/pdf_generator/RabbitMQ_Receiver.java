@@ -23,7 +23,8 @@ public class RabbitMQ_Receiver {
         this.factory = new ConnectionFactory();
         this.pdfGenRepository = new PdfGenRepository();
     }
-    @SuppressWarnings("usused")
+
+    @SuppressWarnings("unused")
     public RabbitMQ_Receiver(ConnectionFactory factory, PdfGenRepository pdfGenRepository) {
         this.factory = factory;
         this.pdfGenRepository = pdfGenRepository;
@@ -50,7 +51,6 @@ public class RabbitMQ_Receiver {
                 JSONArray stationChargingData = (JSONArray) collectedData.get("StationChargingData");
 
                 pdfGenRepository.createBill(customerId, stationChargingData);
-
             } catch (JSONException e) {
                 System.out.print(e.getMessage());
             }
