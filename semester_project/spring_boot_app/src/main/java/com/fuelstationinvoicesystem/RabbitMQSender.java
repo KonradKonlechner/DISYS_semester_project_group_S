@@ -13,11 +13,13 @@ public class RabbitMQSender {
     @Value("${rabbitmq.queue}")
     private String queueName;
 
+    // Konstruktor mit @Autowired, um die AmqpTemplate-Instanz zu injizieren
     @Autowired
     public RabbitMQSender(AmqpTemplate amqpTemplate) {
         this.amqpTemplate = amqpTemplate;
     }
 
+    // Methode zum Senden von Nachrichten an die RabbitMQ-Warteschlange
     public void send(String message) {
         amqpTemplate.convertAndSend(queueName, message);
         System.out.println("Send msg = " + message);

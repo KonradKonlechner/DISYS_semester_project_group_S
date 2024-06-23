@@ -55,6 +55,7 @@ public class InvoiceApp extends Application {
         primaryStage.show();
     }
 
+    // Methode zum Generieren der Rechnung
     private void generateInvoice() {
         String customerId = customerIdField.getText();
         if (customerId.isEmpty()) {
@@ -63,7 +64,7 @@ public class InvoiceApp extends Application {
         }
         stopScheduler();
 
-
+        // Netzwerkoperation in einem separaten Thread ausführen
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
@@ -79,6 +80,7 @@ public class InvoiceApp extends Application {
 
                 int responseCode = connection.getResponseCode();
 
+                // Update der UI im JavaFX Application Thread
                 Platform.runLater(() -> {
                     if (responseCode == 200) {
                         statusLabel.setText("Invoice generation started for customer: " + customerId);
@@ -97,10 +99,13 @@ public class InvoiceApp extends Application {
         }).start();
     }
 
+    // Methode zur Überprüfung der Verfügbarkeit der Rechnung
     private void startCheckingInvoiceAvailability(String customerId) {
         scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> checkInvoiceAvailability(customerId), 0, 5, TimeUnit.SECONDS);
     }
+
+    // Methode, um die Verfügbarkeit der Rechnung zu überprüfen
     private void checkInvoiceAvailability(String customerId) {
         new Thread(() -> {
             HttpURLConnection connection = null;
@@ -131,6 +136,7 @@ public class InvoiceApp extends Application {
         }).start();
     }
 
+    // Methode zum Stoppen des Schedulers
     private void stopScheduler() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdownNow();
@@ -141,6 +147,8 @@ public class InvoiceApp extends Application {
             }
         }
     }
+
+    // Methode zum Herunterladen der Rechnung
     private void downloadInvoice() {
         String customerId = customerIdField.getText();
         if (customerId.isEmpty()) {
@@ -148,6 +156,7 @@ public class InvoiceApp extends Application {
             return;
         }
 
+        // Netzwerkoperation in einem separaten Thread ausführen
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
@@ -168,7 +177,7 @@ public class InvoiceApp extends Application {
                         }
                     }
 
-                    // Open the PDF file with the default system viewer
+                    // PDF-Datei mit dem Standard-Systemviewer öffnen
                     if (Desktop.isDesktopSupported()) {
                         Desktop.getDesktop().open(tempFile);
                     } else {
