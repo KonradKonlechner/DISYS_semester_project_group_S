@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -103,7 +104,13 @@ public class RabbitMQReceiverTest {
         DeliverCallback deliverCallback = deliverCallbackCaptor.getValue();
         deliverCallback.handle("consumerTag", mockDelivery(body));
 
-        verify(pdfGenRepository).createBill(customerId, stationChargingData);
+        ArgumentCaptor<JSONArray> stationChargingDataCaptor = ArgumentCaptor.forClass(JSONArray.class);
+        verify(pdfGenRepository).createBill(eq(customerId), stationChargingDataCaptor.capture());
+
+        // using to string because different object reference of these JSONArrays
+        // we cannot override its equals function to only check for content equality
+        // this unit test is a good example for our lesson learned for planning ahead to improve quality
+        assertEquals(stationChargingData.toString(), stationChargingDataCaptor.getValue().toString());
 
     }
 

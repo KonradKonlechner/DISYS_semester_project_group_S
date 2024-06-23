@@ -23,6 +23,11 @@ public class RabbitMQ_Receiver {
         this.factory = new ConnectionFactory();
         this.pdfGenRepository = new PdfGenRepository();
     }
+    @SuppressWarnings("usused")
+    public RabbitMQ_Receiver(ConnectionFactory factory, PdfGenRepository pdfGenRepository) {
+        this.factory = factory;
+        this.pdfGenRepository = pdfGenRepository;
+    }
 
     public void listen() throws IOException, TimeoutException {
 
