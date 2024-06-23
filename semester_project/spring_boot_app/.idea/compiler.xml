@@ -2,16 +2,10 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="station_data_collector" />
-        <module name="data_collection_dispatcher" />
-        <module name="pdf_generator" />
-        <module name="javafx-app" />
-        <module name="data_collection_receiver" />
         <module name="spring-boot-app" />
       </profile>
     </annotationProcessing>

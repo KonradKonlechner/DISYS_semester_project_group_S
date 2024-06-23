@@ -6,6 +6,13 @@
       <list>
         <option value="$PROJECT_DIR$/javafx-app/pom.xml" />
         <option value="$PROJECT_DIR$/spring_boot_app/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/javafx-app/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/pdf_generator/pdf_generator/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/spring_boot_app/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/data_collection_dispatcher/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/station_data_collector/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/data_collection_receiver/pom.xml" />
+        <option value="$PROJECT_DIR$/semester_project/pdf_generator/pom.xml" />
       </list>
     </option>
   </component>
